@@ -1,0 +1,10 @@
+spring:
+  cache:
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=2m
+
+logging:
+  level:
+    com.krysta.emailreader: TRACE
+    com.google.api: DEBUG
+    org.springframework.web: DEBUG

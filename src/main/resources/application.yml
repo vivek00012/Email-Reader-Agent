@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: email-reader-agent
+  
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=5m
+    cache-names:
+      - emailCounts
+
+server:
+  port: 8080
+
+gmail:
+  application-name: Email Reader Agent
+  credentials-file: /credentials.json
+  tokens-directory: tokens
+  scopes:
+    - https://www.googleapis.com/auth/gmail.readonly
+
+logging:
+  level:
+    com.krysta.emailreader: DEBUG
+    com.google.api: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
