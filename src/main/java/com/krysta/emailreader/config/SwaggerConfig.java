@@ -34,7 +34,12 @@ public class SwaggerConfig {
                 .title("Email Reader Agent API")
                 .version("1.0.0")
                 .description("REST API service that integrates with Gmail to count emails from specific senders. " +
-                             "This API allows you to query the number of emails received from any email address.")
+                             "This API allows you to query the number of emails received from any email address.\n\n" +
+                             "**Authentication:** When you call the email count API for the first time, the Google OAuth consent screen will open automatically in your browser. " +
+                             "Approve access once; tokens are stored locally for reuse.\n\n" +
+                             "**Credentials:** You can provide Gmail OAuth credentials via the `/api/v1/emails/credentials` endpoint. " +
+                             "Alternatively, place credentials.json in src/main/resources/. " +
+                             "Credentials provided via API are stored in memory and take precedence over file-based credentials.")
                 .contact(contact)
                 .license(license);
         

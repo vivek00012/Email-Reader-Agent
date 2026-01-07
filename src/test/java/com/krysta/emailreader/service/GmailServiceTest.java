@@ -23,6 +23,9 @@ class GmailServiceTest {
     @Mock
     private GmailConfig gmailConfig;
     
+    @Mock
+    private CredentialsStorageService credentialsStorageService;
+    
     private GmailService gmailService;
     
     @BeforeEach
@@ -33,7 +36,7 @@ class GmailServiceTest {
         gmailConfig.setTokensDirectory("tokens");
         gmailConfig.setScopes(List.of("https://www.googleapis.com/auth/gmail.readonly"));
         
-        gmailService = new GmailService(gmailConfig);
+        gmailService = new GmailService(gmailConfig, credentialsStorageService);
     }
     
     @Test

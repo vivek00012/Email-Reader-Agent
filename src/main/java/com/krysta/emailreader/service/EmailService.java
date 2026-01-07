@@ -1,12 +1,12 @@
 package com.krysta.emailreader.service;
 
 import com.krysta.emailreader.exception.InvalidEmailException;
+import com.krysta.emailreader.util.LogSanitizer;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
-import java.util.regex.Pattern;
 
 /**
  * Service class for email operations with caching support.
@@ -16,11 +16,8 @@ import java.util.regex.Pattern;
 public class EmailService {
     
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
-    
-    // Email validation regex pattern
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-        "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
-    );
+    private static final int MAX_EMAIL_LENGTH = 254; // RFC 5321
+    private static final EmailValidator EMAIL_VALIDATOR = EmailValidator.getInstance(false);
     
     private final GmailService gmailService;
     
@@ -29,7 +26,12 @@ public class EmailService {
     }
     
     /**
-     * Validates email format.
+     * Validates email format using Apache Commons Validator.
+     * Implements comprehensive validation including:
+     * - RFC 5321 compliance
+     * - Length checks
+     * - Homograph attack prevention
+     * - Special character sanitization
      * 
      * @param email The email address to validate
      * @throws InvalidEmailException if the email format is invalid
@@ -39,8 +41,40 @@ public class EmailService {
             throw new InvalidEmailException("Email address cannot be empty");
         }
         
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
-            throw new InvalidEmailException("Invalid email format: " + email);
+        String trimmedEmail = email.trim();
+        
+        // Check maximum length per RFC 5321
+        if (trimmedEmail.length() > MAX_EMAIL_LENGTH) {
+            throw new InvalidEmailException("Email address exceeds maximum length of " + MAX_EMAIL_LENGTH + " characters");
+        }
+        
+        // Use Apache Commons EmailValidator for robust validation
+        if (!EMAIL_VALIDATOR.isValid(trimmedEmail)) {
+            throw new InvalidEmailException("Invalid email format");
+        }
+        
+        // Prevent homograph attacks - check for non-ASCII characters
+        if (!trimmedEmail.matches("^[\\x00-\\x7F]+$")) {
+            throw new InvalidEmailException("Email address contains invalid characters");
+        }
+        
+        // Additional security checks
+        String localPart = trimmedEmail.substring(0, trimmedEmail.indexOf('@'));
+        String domain = trimmedEmail.substring(trimmedEmail.indexOf('@') + 1);
+        
+        // Check for suspicious patterns in local part
+        if (localPart.startsWith(".") || localPart.endsWith(".") || localPart.contains("..")) {
+            throw new InvalidEmailException("Email address contains invalid format");
+        }
+        
+        // Validate domain has at least one dot
+        if (!domain.contains(".")) {
+            throw new InvalidEmailException("Email domain is invalid");
+        }
+        
+        // Check for IP addresses in domain (potential security risk)
+        if (domain.matches("^\\[?\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\]?$")) {
+            throw new InvalidEmailException("Email addresses with IP domains are not supported");
         }
     }
     
@@ -54,7 +88,7 @@ public class EmailService {
      */
     @Cacheable(value = "emailCounts", key = "#senderEmail")
     public long getEmailCount(String senderEmail) {
-        logger.debug("Getting email count for sender: {}", senderEmail);
+        logger.debug("Getting email count for sender: {}", LogSanitizer.maskEmail(senderEmail));
         
         // Validate email format
         validateEmail(senderEmail);
@@ -62,7 +96,7 @@ public class EmailService {
         // Fetch count from Gmail API
         long count = gmailService.countEmailsFromSender(senderEmail);
         
-        logger.info("Email count for {}: {}", senderEmail, count);
+        logger.info("Email count for {}: {}", LogSanitizer.maskEmail(senderEmail), count);
         return count;
     }
     

@@ -1,7 +1,9 @@
 package com.krysta.emailreader.controller;
 
-import com.krysta.emailreader.exception.InvalidEmailException;
-import com.krysta.emailreader.service.EmailService;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -9,9 +11,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cache.CacheManager;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.krysta.emailreader.exception.InvalidEmailException;
+import com.krysta.emailreader.service.AuditService;
+import com.krysta.emailreader.service.EmailService;
 
 /**
  * Unit tests for EmailController using MockMvc.
@@ -27,6 +29,9 @@ class EmailControllerTest {
     
     @MockBean
     private CacheManager cacheManager;
+    
+    @MockBean
+    private AuditService auditService;
     
     @Test
     void testCountEmails_ValidEmail_ReturnsOk() throws Exception {
@@ -44,7 +49,6 @@ class EmailControllerTest {
                 .andExpect(jsonPath("$.emailCount").value(emailCount))
                 .andExpect(jsonPath("$.cachedResult").isBoolean())
                 .andExpect(jsonPath("$.timestamp").exists());
-        
         verify(emailService, times(1)).getEmailCount(senderEmail);
     }
     
@@ -92,7 +96,6 @@ class EmailControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.senderEmail").value(senderEmail))
                 .andExpect(jsonPath("$.emailCount").value(0));
-        
         verify(emailService, times(1)).getEmailCount(senderEmail);
     }
 }

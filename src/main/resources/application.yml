@@ -8,37 +8,73 @@ spring:
       spec: maximumSize=500,expireAfterWrite=5m
     cache-names:
       - emailCounts
+  
+  servlet:
+    multipart:
+      max-file-size: 1MB
+      max-request-size: 1MB
 
 server:
   port: 8080
+  max-http-request-header-size: 8KB
+  tomcat:
+    max-swallow-size: 2MB
+  compression:
+    enabled: true
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-exception: false
 
 gmail:
   application-name: Email Reader Agent
   credentials-file: /credentials.json
   tokens-directory: tokens
+  oauth-callback-port: ${GMAIL_OAUTH_PORT:8888}
   scopes:
     - https://www.googleapis.com/auth/gmail.readonly
-
-logging:
-  level:
-    com.krysta.emailreader: DEBUG
-    com.google.api: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
+      base-path: /actuator
   endpoint:
     health:
       show-details: when-authorized
+  server:
+    port: ${ACTUATOR_PORT:8080}
 
 springdoc:
   api-docs:
     path: /v3/api-docs
+    enabled: ${SWAGGER_ENABLED:true}
   swagger-ui:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+    enabled: ${SWAGGER_ENABLED:true}
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
+  allowed-methods: GET,POST,OPTIONS
+  max-age: 3600
+
+rate-limit:
+  enabled: true
+  requests-per-minute: ${RATE_LIMIT_RPM:10}
+
+# Security configuration
+security:
+  api-key: ${API_KEY:default-api-key-change-in-production}
+  detailed-errors: false
+  headers:
+    enabled: true
+    hsts-enabled: false
+
+# Audit logging configuration
+logging:
+  level:
+    AUDIT: INFO
+  file:
+    name: logs/audit.log

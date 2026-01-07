@@ -33,4 +33,9 @@ public class GmailConfig {
      * Gmail API scopes required for the application
      */
     private List<String> scopes;
+    
+    /**
+     * OAuth callback port for local authorization
+     */
+    private int oauthCallbackPort = 8888;
 }
