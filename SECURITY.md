@@ -30,19 +30,7 @@ curl -H "X-API-Key: your-api-key-here" http://localhost:8080/api/v1/emails/count
 
 **Configuration File:** `src/main/java/com/krysta/emailreader/config/CorsSecurityConfig.java`
 
-### 3. Rate Limiting
-
-**Per-IP Rate Limiting:**
-- Token bucket algorithm implementation using Bucket4j
-- Default: 10 requests per minute per IP address
-- Configurable via: `RATE_LIMIT_RPM` environment variable
-- HTTP 429 response when limit exceeded
-- X-Rate-Limit-Remaining header in responses
-- Rate limit violations are audited
-
-**Configuration File:** `src/main/java/com/krysta/emailreader/filter/RateLimitFilter.java`
-
-### 4. Error Handling & Information Disclosure
+### 3. Error Handling & Information Disclosure
 
 **Sanitized Error Messages:**
 - No stack traces exposed in production
@@ -58,7 +46,7 @@ curl -H "X-API-Key: your-api-key-here" http://localhost:8080/api/v1/emails/count
 
 **Configuration File:** `src/main/java/com/krysta/emailreader/exception/GlobalExceptionHandler.java`
 
-### 5. Data Protection
+### 4. Data Protection
 
 **OAuth Token Encryption:**
 - AES-256-GCM encryption for tokens at rest
@@ -75,20 +63,7 @@ curl -H "X-API-Key: your-api-key-here" http://localhost:8080/api/v1/emails/count
 - `src/main/java/com/krysta/emailreader/security/EncryptedDataStoreFactory.java`
 - `src/main/java/com/krysta/emailreader/util/LogSanitizer.java`
 
-### 6. Security Headers
-
-**HTTP Security Headers:**
-- `X-Frame-Options: DENY` - Prevents clickjacking
-- `X-Content-Type-Options: nosniff` - Prevents MIME sniffing
-- `X-XSS-Protection: 1; mode=block` - XSS protection
-- `Content-Security-Policy` - Restricts resource loading
-- `Referrer-Policy: strict-origin-when-cross-origin`
-- `Permissions-Policy` - Disables unnecessary browser features
-- `Strict-Transport-Security` - HTTPS enforcement (when enabled)
-
-**Configuration File:** `src/main/java/com/krysta/emailreader/filter/SecurityHeadersFilter.java`
-
-### 7. HTTPS Support
+### 5. HTTPS Support
 
 **SSL/TLS Configuration:**
 - Production profile includes SSL configuration
@@ -109,7 +84,7 @@ java -jar app.jar --spring.profiles.active=prod \
   -DSSL_KEYSTORE_PASSWORD=changeit -DAPI_KEY=your-secure-key
 ```
 
-### 8. Input Validation
+### 6. Input Validation
 
 **Enhanced Email Validation:**
 - Apache Commons Validator for RFC 5321 compliance
@@ -121,13 +96,12 @@ java -jar app.jar --spring.profiles.active=prod \
 
 **Configuration File:** `src/main/java/com/krysta/emailreader/service/EmailService.java`
 
-### 9. Dependency Security
+### 7. Dependency Security
 
 **Updated Dependencies:**
 - Spring Boot: 3.2.11 (from 3.2.1)
 - Google API Client: 2.7.0 (from 2.2.0)
 - Gmail API: v1-rev20240520-2.0.0
-- Bucket4j: 8.10.1 (rate limiting)
 - Apache Commons Validator: 1.9.0
 
 **OWASP Dependency Check:**
@@ -137,12 +111,11 @@ java -jar app.jar --spring.profiles.active=prod \
 
 **Configuration File:** `pom.xml`
 
-### 10. Audit Logging
+### 8. Audit Logging
 
 **Comprehensive Security Logging:**
 - API access logging (who, what, when, from where)
 - Authentication success/failure
-- Rate limit violations
 - Input validation failures
 - Gmail API errors
 - Cache operations
@@ -159,7 +132,7 @@ java -jar app.jar --spring.profiles.active=prod \
 
 **Configuration File:** `src/main/java/com/krysta/emailreader/service/AuditService.java`
 
-### 11. Request Size Limits
+### 9. Request Size Limits
 
 **Protection Against Memory Exhaustion:**
 - Maximum HTTP header size: 8KB
@@ -169,7 +142,7 @@ java -jar app.jar --spring.profiles.active=prod \
 
 **Configuration File:** `src/main/resources/application.yml`
 
-### 12. Actuator Security
+### 10. Actuator Security
 
 **Management Endpoints:**
 - Require authentication
@@ -177,7 +150,7 @@ java -jar app.jar --spring.profiles.active=prod \
 - Limited exposure: health, info, metrics
 - Details shown only when authorized
 
-### 13. Swagger UI Protection
+### 11. Swagger UI Protection
 
 **API Documentation Security:**
 - Disabled by default in production profile
@@ -194,7 +167,6 @@ Required:
 
 Optional:
 - `CORS_ALLOWED_ORIGINS` - Comma-separated list of allowed origins
-- `RATE_LIMIT_RPM` - Requests per minute (default: 10)
 - `GMAIL_OAUTH_PORT` - OAuth callback port (default: 8888)
 - `ACTUATOR_PORT` - Management endpoint port (default: 8080)
 - `SWAGGER_ENABLED` - Enable Swagger UI (default: true in dev, false in prod)
@@ -254,12 +226,11 @@ Optional:
 
 1. **Review audit logs regularly:**
    ```bash
-   tail -f logs/audit.log | grep "AUTH_FAILURE\|RATE_LIMIT_EXCEEDED"
+   tail -f logs/audit.log | grep "AUTH_FAILURE"
    ```
 
 2. **Set up alerts for:**
    - Multiple authentication failures from same IP
-   - Rate limit violations
    - Validation failures
    - Security events
 
@@ -298,14 +269,7 @@ Optional:
    curl -H "X-API-Key: your-key" http://localhost:8080/api/v1/emails/count?senderEmail=test@example.com
    ```
 
-2. **Test rate limiting:**
-   ```bash
-   for i in {1..15}; do 
-     curl -H "X-API-Key: your-key" http://localhost:8080/api/v1/emails/count?senderEmail=test@example.com
-   done
-   ```
-
-3. **Test input validation:**
+2. **Test input validation:**
    ```bash
    # Should fail
    curl -H "X-API-Key: your-key" "http://localhost:8080/api/v1/emails/count?senderEmail=invalid-email"
@@ -328,13 +292,6 @@ zap-cli quick-scan --self-contained --start-options '-config api.disablekey=true
 2. Verify if it's legitimate traffic
 3. Consider blocking the IP if malicious
 4. Rotate API key if compromised
-
-### Rate Limit Violations
-
-1. Review the source IP and patterns
-2. Determine if it's abuse or legitimate high traffic
-3. Adjust rate limits if needed
-4. Implement IP blocking for persistent abuse
 
 ### Data Breach
 
@@ -361,10 +318,8 @@ For security issues, please contact: support@krysta.com
 ### Version 1.0.0 - Security Hardening
 - Implemented API key authentication
 - Added CORS protection
-- Implemented rate limiting
 - Enhanced error handling
 - Encrypted OAuth token storage
-- Added security headers
 - Implemented audit logging
 - Enhanced input validation
 - Updated all dependencies

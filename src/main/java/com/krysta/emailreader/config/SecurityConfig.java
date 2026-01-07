@@ -1,7 +1,5 @@
 package com.krysta.emailreader.config;
 
-import com.krysta.emailreader.filter.RateLimitFilter;
-import com.krysta.emailreader.filter.SecurityHeadersFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,7 +7,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
@@ -19,15 +16,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
     
-    private final RateLimitFilter rateLimitFilter;
-    private final SecurityHeadersFilter securityHeadersFilter;
     private final CorsConfigurationSource corsConfigurationSource;
     
-    public SecurityConfig(RateLimitFilter rateLimitFilter,
-                         SecurityHeadersFilter securityHeadersFilter,
-                         CorsConfigurationSource corsConfigurationSource) {
-        this.rateLimitFilter = rateLimitFilter;
-        this.securityHeadersFilter = securityHeadersFilter;
+    public SecurityConfig(CorsConfigurationSource corsConfigurationSource) {
         this.corsConfigurationSource = corsConfigurationSource;
     }
     
@@ -41,21 +32,15 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             
             // Configure authorization rules
-            .authorizeHttpRequests(auth -> {
+            .authorizeHttpRequests(auth -> 
                 // Allow all requests (no authentication)
-                auth.anyRequest().permitAll();
-            })
+                auth.anyRequest().permitAll()
+            )
             
             // Stateless session management
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            
-            // Add security headers filter first
-            .addFilterBefore(securityHeadersFilter, UsernamePasswordAuthenticationFilter.class)
-            
-            // Add rate limiting filter
-            .addFilterAfter(rateLimitFilter, SecurityHeadersFilter.class);
+            );
         
         return http.build();
     }

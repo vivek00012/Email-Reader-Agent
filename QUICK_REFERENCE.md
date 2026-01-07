@@ -47,6 +47,27 @@ curl "http://localhost:8080/api/v1/emails/count?senderEmail=superman@example.com
 }
 ```
 
+### Upload Credentials
+```bash
+POST /api/v1/emails/credentials
+```
+
+**Example:**
+```bash
+curl -X POST http://localhost:8080/api/v1/emails/credentials \
+  -F "file=@/path/to/credentials.json"
+```
+
+### Clear Credentials
+```bash
+DELETE /api/v1/emails/credentials
+```
+
+**Example:**
+```bash
+curl -X DELETE http://localhost:8080/api/v1/emails/credentials
+```
+
 ## 📝 Response Codes
 
 | Code | Meaning | Description |
@@ -123,10 +144,10 @@ mvn clean install -DskipTests
 
 | Problem | Solution |
 |---------|----------|
-| Credentials not found | Add `credentials.json` to `src/main/resources/` |
-| Port 8080 in use | Change port in `application.yml` or kill process |
+| Credentials not found | Upload via API: `curl -X POST /api/v1/emails/credentials -F "file=@credentials.json"` OR add to `src/main/resources/` |
+| Port 8080 in use | Change port in `application.yml` or kill process: `lsof -ti:8080 \| xargs kill -9` |
 | OAuth won't open | Check port 8888, use URL from console |
-| Invalid grant error | Delete `tokens/` folder, restart app |
+| Invalid grant error | Clear credentials: `curl -X DELETE /api/v1/emails/credentials` OR delete `tokens/` folder |
 | Tests failing | Ensure no credentials required for unit tests |
 
 ## 💾 Cache Configuration
@@ -173,7 +194,8 @@ logging:
 |------|---------|
 | **README.md** | Complete documentation |
 | **SETUP.md** | Quick setup guide |
-| **API_EXAMPLES.md** | Usage examples (all languages) |
+| **IMPLEMENTATION_COMPLETE.md** | Implementation status and examples |
+| **SECURITY.md** | Security documentation |
 | **CONTRIBUTING.md** | Contribution guidelines |
 | **PROJECT_SUMMARY.md** | Project overview |
 | **QUICK_REFERENCE.md** | This file |
@@ -185,22 +207,33 @@ logging:
 curl http://localhost:8080/actuator/health
 ```
 
-### 2. Count emails from sender
+### 2. Upload credentials via API
+```bash
+curl -X POST http://localhost:8080/api/v1/emails/credentials \
+  -F "file=@/path/to/credentials.json"
+```
+
+### 3. Count emails from sender
 ```bash
 curl "http://localhost:8080/api/v1/emails/count?senderEmail=test@example.com"
 ```
 
-### 3. View API documentation
+### 4. View API documentation
 ```bash
 open http://localhost:8080/swagger-ui.html
 ```
 
-### 4. Run in development mode
+### 5. Clear credentials and tokens
+```bash
+curl -X DELETE http://localhost:8080/api/v1/emails/credentials
+```
+
+### 6. Run in development mode
 ```bash
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-### 5. Check cache statistics
+### 7. Check cache statistics
 Enable DEBUG logging for `org.springframework.cache`
 
 ## 🔄 Development Workflow
@@ -225,9 +258,10 @@ Enable DEBUG logging for `org.springframework.cache`
 
 1. Check **README.md** for detailed docs
 2. See **SETUP.md** for setup issues
-3. View **API_EXAMPLES.md** for code samples
+3. View **IMPLEMENTATION_COMPLETE.md** for examples
 4. Open **Swagger UI** for API reference
-5. Check logs in console for errors
+5. Check **SECURITY.md** for security features
+6. Check logs in console for errors
 
 ## 🎨 Useful Maven Commands
 

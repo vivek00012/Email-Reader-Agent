@@ -20,6 +20,7 @@ A production-ready Spring Boot REST API service that integrates with Gmail to co
 ## Features
 
 - ✅ **Gmail Integration** - Seamlessly integrates with Gmail API using OAuth 2.0
+- ✅ **Credentials Management** - Upload/delete credentials via API (file or in-memory)
 - ✅ **Email Counting** - Accurately counts emails from any specified sender
 - ✅ **Intelligent Caching** - Reduces API calls with Caffeine cache (5-minute TTL)
 - ✅ **RESTful API** - Clean, well-documented REST endpoints
@@ -287,6 +288,45 @@ if response.status_code == 200:
 }
 ```
 
+### Upload Gmail Credentials
+
+Upload credentials.json file via API:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/emails/credentials \
+  -F "file=@/path/to/credentials.json"
+```
+
+#### Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "message": "Credentials stored successfully",
+  "filename": "credentials.json",
+  "size": "542",
+  "timestamp": "2026-01-08T01:30:00"
+}
+```
+
+### Clear Credentials
+
+Remove stored credentials and delete OAuth tokens:
+
+```bash
+curl -X DELETE http://localhost:8080/api/v1/emails/credentials
+```
+
+#### Response (200 OK)
+
+```json
+{
+  "status": "success",
+  "message": "Credentials cleared, tokens deleted, and cache invalidated successfully",
+  "timestamp": "2026-01-08T01:30:00"
+}
+```
+
 ### Health Check
 
 ```bash
@@ -329,9 +369,12 @@ View coverage report: `target/site/jacoco/index.html`
 
 1. Open [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 2. Navigate to **"Email Operations"** section
-3. Click on **"GET /api/v1/emails/count"**
+3. Test any endpoint:
+   - **GET /api/v1/emails/count** - Count emails from sender
+   - **POST /api/v1/emails/credentials** - Upload credentials file
+   - **DELETE /api/v1/emails/credentials** - Clear credentials
 4. Click **"Try it out"**
-5. Enter an email address in `senderEmail` parameter
+5. Enter required parameters or upload file
 6. Click **"Execute"**
 7. View the response
 
@@ -339,10 +382,18 @@ View coverage report: `target/site/jacoco/index.html`
 
 ### Issue: "Credentials file not found"
 
-**Solution:**
+**Solution Option 1 - File-based (Traditional):**
 - Ensure `credentials.json` is in `src/main/resources/credentials.json`
 - Verify the file was downloaded from Google Cloud Console
 - Check file permissions
+
+**Solution Option 2 - API Upload (Recommended):**
+Upload credentials via API instead:
+```bash
+curl -X POST http://localhost:8080/api/v1/emails/credentials \
+  -F "file=@/path/to/credentials.json"
+```
+This stores credentials in memory (cleared on restart)
 
 ### Issue: OAuth Browser Window Doesn't Open
 

@@ -67,7 +67,10 @@ The **Email Reader Agent** has been fully implemented according to the specifica
 ```
 ✅ EmailController - REST endpoints
 ✅ GET /api/v1/emails/count endpoint
+✅ POST /api/v1/emails/credentials endpoint (upload credentials)
+✅ DELETE /api/v1/emails/credentials endpoint (clear credentials)
 ✅ Query parameter validation
+✅ File upload handling
 ✅ Swagger annotations
 ✅ Health check endpoint
 ```
@@ -126,7 +129,7 @@ The **Email Reader Agent** has been fully implemented according to the specifica
 | **Lines of Code** | ~696 lines (Java only) |
 | **Documentation** | ~55KB total |
 | **Dependencies** | 10+ major libraries |
-| **Endpoints** | 6 API endpoints |
+| **Endpoints** | 7 API endpoints |
 | **Test Coverage** | Comprehensive |
 
 ## 🏗️ Architecture Overview
@@ -161,10 +164,12 @@ The **Email Reader Agent** has been fully implemented according to the specifica
 
 ### 1. OAuth 2.0 Authentication
 - ✅ Secure credential loading from `credentials.json`
+- ✅ In-memory credentials upload via API
 - ✅ Token storage in `tokens/` directory
 - ✅ Automatic browser-based authorization flow
 - ✅ Token persistence across restarts
 - ✅ Read-only Gmail scope
+- ✅ Credentials clearing and token deletion via API
 
 ### 2. Email Counting
 - ✅ Query emails by sender address
@@ -206,7 +211,15 @@ The **Email Reader Agent** has been fully implemented according to the specifica
 - ✅ Null/empty checking
 - ✅ User-friendly error messages
 
-### 8. Logging
+### 8. Credentials Management
+- ✅ Upload credentials via multipart/form-data
+- ✅ In-memory storage (cleared on restart)
+- ✅ Delete credentials and OAuth tokens via API
+- ✅ Automatic cache invalidation on changes
+- ✅ Fallback to file-based credentials
+- ✅ File validation and error handling
+
+### 9. Logging
 - ✅ SLF4J with Logback
 - ✅ Configurable log levels
 - ✅ Debug logging for troubleshooting
@@ -299,11 +312,13 @@ The **Email Reader Agent** has been fully implemented according to the specifica
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/api/v1/emails/count?senderEmail={email}` | Count emails |
-| GET | `/api/v1/emails/health` | Service health |
-| GET | `/swagger-ui.html` | API documentation |
-| GET | `/v3/api-docs` | OpenAPI spec |
-| GET | `/actuator/health` | App health |
+| GET | `/api/v1/emails/count?senderEmail={email}` | Count emails from sender |
+| POST | `/api/v1/emails/credentials` | Upload Gmail credentials file |
+| DELETE | `/api/v1/emails/credentials` | Clear credentials and tokens |
+| GET | `/api/v1/emails/health` | Service health check |
+| GET | `/swagger-ui.html` | Interactive API documentation |
+| GET | `/v3/api-docs` | OpenAPI specification |
+| GET | `/actuator/health` | Application health status |
 
 ## 🎨 Example Request/Response
 
@@ -331,6 +346,46 @@ curl "http://localhost:8080/api/v1/emails/count?senderEmail=superman@example.com
   "path": "/api/v1/emails/count"
 }
 ```
+
+## 📤 Credentials Management Examples
+
+### Upload Credentials (POST)
+```bash
+curl -X POST http://localhost:8080/api/v1/emails/credentials \
+  -F "file=@/path/to/credentials.json"
+```
+
+**Response (Success - 200 OK)**
+```json
+{
+  "status": "success",
+  "message": "Credentials stored successfully",
+  "filename": "credentials.json",
+  "size": "542",
+  "timestamp": "2026-01-07T10:30:00"
+}
+```
+
+### Clear Credentials (DELETE)
+```bash
+curl -X DELETE http://localhost:8080/api/v1/emails/credentials
+```
+
+**Response (Success - 200 OK)**
+```json
+{
+  "status": "success",
+  "message": "Credentials cleared, tokens deleted, and cache invalidated successfully",
+  "timestamp": "2026-01-07T10:30:00"
+}
+```
+
+**Features:**
+- ✅ Upload credentials.json via file upload
+- ✅ Credentials stored in memory (cleared on restart)
+- ✅ Automatic cache invalidation on upload/delete
+- ✅ OAuth token deletion on credential clearing
+- ✅ Fallback to file-based credentials after deletion
 
 ## 🔒 Security Features
 

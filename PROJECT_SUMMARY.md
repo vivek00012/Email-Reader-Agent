@@ -7,27 +7,30 @@
 ## Project Statistics
 
 - **Language:** Java 17
-- **Framework:** Spring Boot 3.2.1
+- **Framework:** Spring Boot 3.2.11
 - **Build Tool:** Maven
-- **Lines of Code:** ~1,500+
+- **Lines of Code:** ~4,200+
 - **Test Coverage:** Comprehensive unit and integration tests
-- **Documentation:** Extensive README, API examples, and setup guides
+- **Documentation:** Extensive README, API examples, security documentation, and setup guides
 
 ## Technology Stack
 
 ### Core Technologies
-- **Spring Boot 3.2.1** - Application framework
+- **Spring Boot 3.2.11** - Application framework
 - **Java 17** - Programming language
 - **Maven** - Build and dependency management
 
 ### Key Dependencies
 - **Spring Web** - REST API functionality
+- **Spring Security** - Authentication and authorization
 - **Spring Cache + Caffeine** - Intelligent caching layer
 - **Spring Validation** - Input validation
 - **Spring Actuator** - Health checks and monitoring
-- **Google API Client** - Gmail API integration
-- **Google OAuth Client** - Authentication
+- **Google API Client 2.7.0** - Gmail API integration
+- **Google OAuth Client 1.36.0** - OAuth 2.0 authentication
+- **Gmail API v1-rev20240520-2.0.0** - Gmail API
 - **SpringDoc OpenAPI** - Swagger documentation
+- **Apache Commons Validator 1.9.0** - Enhanced email validation
 - **Lombok** - Code simplification
 - **JUnit 5 + Mockito** - Testing framework
 
@@ -43,14 +46,24 @@ Email-Reader-Agent/
 │   │   │   │   └── EmailController.java             # REST endpoints
 │   │   │   ├── service/
 │   │   │   │   ├── EmailService.java                # Business logic
-│   │   │   │   └── GmailService.java                # Gmail integration
+│   │   │   │   ├── GmailService.java                # Gmail integration
+│   │   │   │   ├── AuditService.java                # Audit logging
+│   │   │   │   └── CredentialsStorageService.java   # Credentials management
 │   │   │   ├── dto/
 │   │   │   │   ├── EmailCountResponse.java          # Response DTO
-│   │   │   │   └── ErrorResponse.java               # Error DTO
+│   │   │   │   ├── ErrorResponse.java               # Error DTO
+│   │   │   │   └── CredentialsRequest.java          # Credentials DTO
 │   │   │   ├── config/
 │   │   │   │   ├── SwaggerConfig.java               # API docs config
 │   │   │   │   ├── GmailConfig.java                 # Gmail config
-│   │   │   │   └── CacheConfig.java                 # Cache config
+│   │   │   │   ├── CacheConfig.java                 # Cache config
+│   │   │   │   ├── SecurityConfig.java              # Security config
+│   │   │   │   └── CorsSecurityConfig.java          # CORS config
+│   │   │   ├── security/
+│   │   │   │   ├── EncryptedDataStoreFactory.java   # Token encryption
+│   │   │   │   └── EncryptedFileDataStore.java      # Encrypted storage
+│   │   │   ├── util/
+│   │   │   │   └── LogSanitizer.java                # PII masking
 │   │   │   └── exception/
 │   │   │       ├── GmailApiException.java           # Gmail errors
 │   │   │       ├── InvalidEmailException.java       # Validation errors
@@ -70,9 +83,13 @@ Email-Reader-Agent/
 ├── pom.xml                                            # Maven config
 ├── .gitignore                                         # Git ignore rules
 ├── README.md                                          # Main documentation
+├── SECURITY.md                                        # Security documentation
+├── SECURITY_IMPLEMENTATION_SUMMARY.md                 # Security implementation details
 ├── SETUP.md                                           # Quick setup guide
 ├── API_EXAMPLES.md                                    # Usage examples
 ├── CONTRIBUTING.md                                    # Contribution guide
+├── IMPLEMENTATION_COMPLETE.md                         # Implementation status
+├── QUICK_REFERENCE.md                                 # Quick reference guide
 ├── LICENSE                                            # MIT License
 ├── run.sh                                             # Quick start script
 └── PROJECT_SUMMARY.md                                 # This file
@@ -80,42 +97,52 @@ Email-Reader-Agent/
 
 ## Key Features
 
-### 1. Gmail Integration
+### 1. Security & Authentication
+- API Key authentication
+- CORS protection with whitelisted origins
+- Encrypted OAuth token storage (AES-256-GCM)
+- PII masking in logs
+- Enhanced input validation
+- Comprehensive audit logging
+- HTTPS/TLS support
+- Secure error handling
+
+### 2. Gmail Integration
 - OAuth 2.0 authentication flow
-- Secure credential storage
+- Encrypted credential storage
 - Read-only Gmail access
 - Pagination support for large datasets
 - Handles Gmail API rate limits
 
-### 2. REST API
+### 3. REST API
 - Clean RESTful design
 - JSON request/response format
 - Comprehensive error handling
 - Input validation
 - HTTP status codes (200, 400, 401, 429, 500)
 
-### 3. Caching Layer
+### 4. Caching Layer
 - Caffeine cache implementation
 - 5-minute TTL (configurable)
 - 500 entry maximum (configurable)
 - Reduces Gmail API calls
 - Cache hit/miss tracking
 
-### 4. API Documentation
+### 5. API Documentation
 - Interactive Swagger UI
 - OpenAPI 3.0 specification
 - Request/response examples
 - Try-it-out functionality
 - Schema definitions
 
-### 5. Error Handling
+### 6. Error Handling
 - Global exception handler
 - Custom exception types
 - Meaningful error messages
 - Structured error responses
 - Proper HTTP status codes
 
-### 6. Testing
+### 7. Testing
 - Unit tests for services
 - Integration tests for controllers
 - Mock-based testing
@@ -208,12 +235,18 @@ server:
 
 ## Security Considerations
 
-- ✅ OAuth 2.0 with secure token storage
+- ✅ API Key authentication for all endpoints
+- ✅ OAuth 2.0 with AES-256-GCM encrypted token storage
 - ✅ Read-only Gmail access (minimal permissions)
+- ✅ CORS protection with whitelisted origins
 - ✅ Credentials excluded from version control
-- ✅ Input validation and sanitization
-- ✅ No sensitive data in logs
-- ✅ HTTPS recommended for production
+- ✅ Enhanced input validation (RFC 5321 compliant)
+- ✅ PII masking in logs (email addresses, IP addresses)
+- ✅ Comprehensive audit logging
+- ✅ Secure error handling (no stack traces exposed)
+- ✅ Request size limits
+- ✅ HTTPS/TLS support for production
+- ✅ Up-to-date dependencies with no known vulnerabilities
 
 ## Performance
 
@@ -266,9 +299,12 @@ mvn clean test jacoco:report
    - Log aggregation (ELK stack)
 
 4. **Security:**
-   - Enable HTTPS
-   - Use secure OAuth token storage
-   - Implement rate limiting at API gateway
+   - Set strong API key: `export API_KEY=$(openssl rand -base64 32)`
+   - Enable HTTPS with valid SSL certificate
+   - Configure CORS allowed origins
+   - Use encrypted OAuth token storage (built-in)
+   - Review and monitor audit logs
+   - Disable Swagger UI in production
 
 5. **Scaling:**
    - Stateless design allows horizontal scaling
@@ -289,9 +325,13 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 ### Available Documentation
 - **README.md** - Complete project documentation
+- **SECURITY.md** - Comprehensive security documentation
+- **SECURITY_IMPLEMENTATION_SUMMARY.md** - Security implementation details
 - **SETUP.md** - Quick setup guide
 - **API_EXAMPLES.md** - Usage examples in multiple languages
 - **CONTRIBUTING.md** - Contribution guidelines
+- **IMPLEMENTATION_COMPLETE.md** - Implementation completion status
+- **QUICK_REFERENCE.md** - Quick reference guide
 - **Swagger UI** - Interactive API documentation
 
 ### External Resources
